@@ -1,3 +1,4 @@
+import pygame
 import pygame as py
 from settings import *
 
@@ -7,9 +8,14 @@ class Sprite(py.sprite.Sprite):
         super(Sprite, self).__init__()
         self.frames = frames
         self.animation = self.stand_animation()
-        self.image = frames[0][0]
+        if frames is not None:
+            if type(frames) == pygame.Surface:
+                self.image = frames
+            else:
+                self.image = frames[0][0]
         self.rect = self.image.get_rect()
         self.pos = pos
+        self.offset = (0, 0)
         self.waittime = 0
 
     def stand_animation(self):
@@ -21,7 +27,7 @@ class Sprite(py.sprite.Sprite):
 
     def update(self, *args):
         self.waittime += 1
-        if self.waittime == 3:
+        if self.waittime == 6:
             self.waittime = 0
             self.animation.__next__()
 
@@ -34,6 +40,6 @@ class Sprite(py.sprite.Sprite):
 
     pos = property(_get_pos, _set_pos)
 
-    def move(self, dx, dy):
-        self.rect.move_ip(dx, dy)
-        self.depth = self.rect.midbottom[1]
+    def move(self, offset):
+        self.pos = (self.pos[0] - (offset[0] - self.offset[0]) / TILESIZE_SCALED, self.pos[1] - (offset[1] - self.offset[1]) / TILESIZE_SCALED)
+        self.offset = offset

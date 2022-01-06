@@ -4,8 +4,9 @@ import pygame as py
 from settings import *
 from cache import *
 
+
 class Level(object):
-    def load_file(self, filename="level.map"):
+    def __init__(self, filename="level.map"):
         self.map = []
         self.key = {}
         parser = configparser.ConfigParser()
@@ -15,13 +16,26 @@ class Level(object):
 
         random.seed()
 
-        for y in range(0, 100):
+        for y in range(GAME_SIZE):
             line = ''
-            for x in range(0, 100):
+            for x in range(GAME_SIZE):
+                if (x > 0 and line[x - 1] == 'g') or (y > 0 and self.map[y - 1][x] == 'g') or ((x > 0 and y > 0) and self.map[y - 1][x - 1] == 'g'):
+                    line = line + '.'
+                    continue
+
+                if x < GAME_SIZE - 2 and y > 0:
+                    if self.map[y - 1][x + 1] == 'g':
+                        line = line + '.'
+                        continue
+
                 if random.randint(1, 20) == 1:
                     line = line + 't'
-                else:
-                    line = line + '.'
+                    continue
+                if random.randint(1, 500) == 1:
+                    if x < GAME_SIZE - 1 and y < GAME_SIZE - 1:
+                        line = line + 'g'
+                        continue
+                line = line + '.'
             self.map.append(line)
 
         for section in parser.sections():
@@ -35,6 +49,7 @@ class Level(object):
             for x, c in enumerate(line):
                 if 'sprite' in self.key[c]:
                     self.items[(x, y)] = self.key[c]
+        self.camera = Camera(self)
 
     def get_tile(self, x, y):
         """Gibt zurück, was an einer bestimmten Position ist."""
@@ -91,3 +106,34 @@ class Level(object):
                     if self.is_tree(map_x, map_y):
                         overlays[(map_x, map_y)] = tiles[0][3]
         return image, overlays
+
+
+class Camera:
+    def __init__(self, level):
+        self.width = py.display.Info().current_w
+        self.height = py.display.Info().current_h
+
+        self.x_offset = 0
+        self.y_offset = 0
+
+        self.level = level
+
+    def moveRight(self):
+        self.x_offset = self.x_offset + 30
+        if self.x_offset + self.width > self.level.width * TILESIZE_SCALED:
+            self.x_offset = self.level.width * TILESIZE_SCALED - self.width
+
+    def moveLeft(self):
+        self.x_offset = self.x_offset - 30
+        if self.x_offset < 0:
+            self.x_offset = 0
+
+    def moveDown(self):
+        self.y_offset = self.y_offset + 30
+        if self.y_offset + self.height > self.level.height * TILESIZE_SCALED:
+            self.y_offset = self.level.height * TILESIZE_SCALED - self.height
+
+    def moveUp(self):
+        self.y_offset = self.y_offset - 30
+        if self.y_offset < 0:
+            self.y_offset = 0
