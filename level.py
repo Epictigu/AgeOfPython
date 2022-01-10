@@ -105,7 +105,10 @@ class Level(object):
                 if map_y > 0:
                     if self.is_tree(map_x, map_y):
                         overlays[(map_x, map_y)] = tiles[0][3]
-        return image, overlays
+
+        minimap = py.transform.scale(image.copy(), (MINIMAP_SIZE, MINIMAP_SIZE))
+
+        return image, overlays, minimap
 
 
 class Camera:
@@ -137,3 +140,16 @@ class Camera:
         self.y_offset = self.y_offset - 30
         if self.y_offset < 0:
             self.y_offset = 0
+
+    def move(self, middle):
+        if middle[0] > self.level.width * TILESIZE_SCALED - self.width / 2:
+            middle = (self.level.width * TILESIZE_SCALED - self.width / 2, middle[1])
+        if middle[1] > self.level.height * TILESIZE_SCALED - self.height / 2:
+            middle = (middle[0], self.level.height * TILESIZE_SCALED - self.height / 2)
+        if middle[0] < 0 + self.width / 2:
+            middle = (self.width / 2, middle[1])
+        if middle[1] < 0 + self.height / 2:
+            middle = (middle[0], self.height / 2)
+
+        self.x_offset = middle[0] - self.width / 2
+        self.y_offset = middle[1] - self.height / 2

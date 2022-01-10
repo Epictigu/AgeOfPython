@@ -12,16 +12,25 @@ def redraw_selectors():
     for s in selector.sprites():
         mouse_pos = pygame.mouse.get_pos()
 
-        xpos_offset = level.camera.x_offset % TILESIZE_SCALED
-        ypos_offset = level.camera.y_offset % TILESIZE_SCALED
+        if mouse_pos[0] < MINIMAP_SIZE and mouse_pos[1] > py.display.Info().current_h - MINIMAP_SIZE:
+            s.pos = (-1, -1)
+        else:
+            xpos_offset = level.camera.x_offset % TILESIZE_SCALED
+            ypos_offset = level.camera.y_offset % TILESIZE_SCALED
 
-        xpos = int((mouse_pos[0] + xpos_offset) / TILESIZE_SCALED) - xpos_offset / TILESIZE_SCALED
-        ypos = int((mouse_pos[1] + ypos_offset) / TILESIZE_SCALED) - ypos_offset / TILESIZE_SCALED
-        if xpos >= level.width:
-            xpos = level.width - 1
-        if ypos >= level.height:
-            ypos = level.height - 1
-        s.pos = (xpos, ypos)
+            xpos = int((mouse_pos[0] + xpos_offset) / TILESIZE_SCALED) - xpos_offset / TILESIZE_SCALED
+            ypos = int((mouse_pos[1] + ypos_offset) / TILESIZE_SCALED) - ypos_offset / TILESIZE_SCALED
+            if xpos >= level.width:
+                xpos = level.width - 1
+            if ypos >= level.height:
+                ypos = level.height - 1
+            s.pos = (xpos, ypos)
+
+
+def move_map(x_pos, y_pos):
+    level.camera.move((int(x_pos / MINIMAP_SIZE * level.width * TILESIZE_SCALED), int(y_pos / MINIMAP_SIZE * level.height * TILESIZE_SCALED)))
+    move_sprites(sprites)
+    move_sprites(overlays)
 
 
 def check_for_edge():
@@ -61,7 +70,7 @@ if __name__ == '__main__':
 
     clock = pygame.time.Clock()
 
-    background, overlay_dict = level.render()
+    background, overlay_dict, minimap = level.render()
     overlays = pygame.sprite.RenderUpdates()
     for(x, y), image in overlay_dict.items():
         overlay = Sprite((x, y), image)
@@ -70,11 +79,16 @@ if __name__ == '__main__':
     screen.blit(background, (0, 0))
 
     overlays.draw(screen)
+    screen.blit(minimap, (0, py.display.Info().current_h - MINIMAP_SIZE))
     pygame.display.flip()
+
+    minimap_distance = py.display.Info().current_h - MINIMAP_SIZE
 
     pressed_keys = []
     mouse_edge = []
     game_over = False
+    minimap_pressed = False
+
     while not game_over:
         screen.blit(background, (level.camera.x_offset * -1, level.camera.y_offset * -1))
 
@@ -83,6 +97,15 @@ if __name__ == '__main__':
         sprites.draw(screen)
         overlays.draw(screen)
         selector.draw(screen)
+
+        screen.blit(minimap, (0, minimap_distance))
+
+        minimap_x = (py.display.Info().current_w / background.get_width() * level.camera.x_offset) / py.display.Info().current_w * MINIMAP_SIZE
+        minimap_y = (py.display.Info().current_h / background.get_height() * level.camera.y_offset) / py.display.Info().current_h * MINIMAP_SIZE
+        minimap_width = (py.display.Info().current_w / background.get_width() * (level.camera.x_offset + py.display.Info().current_w) / py.display.Info().current_w * MINIMAP_SIZE - minimap_x)
+        minimap_height = (py.display.Info().current_h / background.get_height() * (level.camera.y_offset + py.display.Info().current_h) / py.display.Info().current_h * MINIMAP_SIZE - minimap_y)
+
+        py.draw.rect(screen, py.Color(255, 255, 255), (minimap_x, minimap_y + minimap_distance, minimap_width, minimap_height), 1)
 
         pygame.display.flip()
         clock.tick(60)
@@ -111,6 +134,20 @@ if __name__ == '__main__':
                     pressed_keys.remove(event.key)
             elif event.type == pygame.locals.MOUSEMOTION:
                 redraw_selectors()
-                check_for_edge()
+                if minimap_pressed:
+                    x_pos = event.pos[0]
+                    y_pos = event.pos[1] - (py.display.Info().current_h - MINIMAP_SIZE)
+                    move_map(x_pos, y_pos)
+                else:
+                    check_for_edge()
+            elif event.type == pygame.locals.MOUSEBUTTONDOWN:
+                if event.pos[1] >= py.display.Info().current_h - MINIMAP_SIZE and event.pos[0] <= MINIMAP_SIZE:
+                    x_pos = event.pos[0]
+                    y_pos = event.pos[1] - (py.display.Info().current_h - MINIMAP_SIZE)
+                    move_map(x_pos, y_pos)
+                    minimap_pressed = True
+            elif event.type == pygame.locals.MOUSEBUTTONUP:
+                if minimap_pressed:
+                    minimap_pressed = False
 
 
