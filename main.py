@@ -6,6 +6,7 @@ from settings import *
 from cache import *
 from level import *
 from sprite import *
+from entity import *
 
 
 def redraw_selectors():
@@ -76,13 +77,10 @@ if __name__ == '__main__':
         overlay = Sprite((x, y), image)
         overlay.rect = image.get_rect().move(x * TILESIZE_SCALED, y * TILESIZE_SCALED - TILESIZE_SCALED)
         overlays.add(overlay)
-    screen.blit(background, (0, 0))
-
-    overlays.draw(screen)
-    screen.blit(minimap, (0, py.display.Info().current_h - MINIMAP_SIZE))
-    pygame.display.flip()
 
     minimap_distance = py.display.Info().current_h - MINIMAP_SIZE
+
+    Entity((0, 0), None, "worker")
 
     pressed_keys = []
     mouse_edge = []

@@ -1,0 +1,26 @@
+[entity]
+texture = Peasant.png
+
+[standing]
+start = 0
+end = 7
+
+[run_right]
+start = 8
+end = 15
+
+[run_up]
+start = 16
+end = 23
+
+[run_down]
+start = 24
+end = 31
+
+[wood]
+start = 32
+end = 39
+
+[death]
+start = 40
+end = 43
