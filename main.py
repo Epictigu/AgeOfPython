@@ -32,6 +32,7 @@ def move_map(x_pos, y_pos):
     level.camera.move((int(x_pos / MINIMAP_SIZE * level.width * TILESIZE_SCALED), int(y_pos / MINIMAP_SIZE * level.height * TILESIZE_SCALED)))
     move_sprites(sprites)
     move_sprites(overlays)
+    move_sprites(entities)
 
 
 def check_for_edge():
@@ -54,6 +55,13 @@ def check_for_edge():
 def move_sprites(sprite_group):
     for s in sprite_group:
         s.move((level.camera.x_offset, level.camera.y_offset))
+
+
+def get_pos(x, y):
+    pos_x = level.camera.x_offset + x
+    pos_y = level.camera.y_offset + y
+
+    return int(pos_x / TILESIZE_SCALED), int(pos_y / TILESIZE_SCALED)
 
 
 if __name__ == '__main__':
@@ -80,7 +88,8 @@ if __name__ == '__main__':
 
     minimap_distance = py.display.Info().current_h - MINIMAP_SIZE
 
-    Entity((0, 0), None, "worker")
+    entities = py.sprite.RenderUpdates()
+    entities.add(Entity((1, 1), "worker"))
 
     pressed_keys = []
     mouse_edge = []
@@ -91,9 +100,11 @@ if __name__ == '__main__':
         screen.blit(background, (level.camera.x_offset * -1, level.camera.y_offset * -1))
 
         sprites.update()
+        entities.update()
 
         sprites.draw(screen)
         overlays.draw(screen)
+        entities.draw(screen)
         selector.draw(screen)
 
         screen.blit(minimap, (0, minimap_distance))
@@ -120,6 +131,7 @@ if __name__ == '__main__':
             redraw_selectors()
             move_sprites(sprites)
             move_sprites(overlays)
+            move_sprites(entities)
 
         for event in pygame.event.get():
             if event.type == pygame.locals.QUIT:
@@ -144,6 +156,11 @@ if __name__ == '__main__':
                     y_pos = event.pos[1] - (py.display.Info().current_h - MINIMAP_SIZE)
                     move_map(x_pos, y_pos)
                     minimap_pressed = True
+                else:
+                    if event.button == 3:
+                        for entity in entities:
+                            e_pos = get_pos(event.pos[0], event.pos[1])
+                            entity.go_to((e_pos[0], e_pos[1]))
             elif event.type == pygame.locals.MOUSEBUTTONUP:
                 if minimap_pressed:
                     minimap_pressed = False

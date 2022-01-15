@@ -1,5 +1,9 @@
 [entity]
 texture = Peasant.png
+health = 10
+damage = 1
+speed = 1
+default_animation = standing
 
 [standing]
 start = 0
@@ -17,7 +21,15 @@ end = 23
 start = 24
 end = 31
 
+[run_left]
+start = 44
+end = 51
+
 [wood]
+start = 32
+end = 39
+
+[attack]
 start = 32
 end = 39
 

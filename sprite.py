@@ -1,4 +1,3 @@
-import pygame
 import pygame as py
 from settings import *
 
@@ -9,13 +8,13 @@ class Sprite(py.sprite.Sprite):
         self.frames = frames
         self.animation = self.stand_animation()
         if frames is not None:
-            if type(frames) == pygame.Surface:
+            if type(frames) == py.Surface:
                 self.image = frames
             else:
                 self.image = frames[0][0]
         self.rect = self.image.get_rect()
-        self.pos = pos
         self.offset = (0, 0)
+        self.pos = pos
         self.waittime = 0
 
     def stand_animation(self):
