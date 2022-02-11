@@ -10,7 +10,7 @@ from cache import *
 
 class Level(object):
     def __init__(self, filename="level.map"):
-        self.map = []
+        self.map = [['.' for i in range(GAME_SIZE)] for j in range(GAME_SIZE)]
         self.key = {}
         parser = configparser.ConfigParser()
         parser.read("levels/" + filename)
@@ -22,24 +22,24 @@ class Level(object):
         for y in range(GAME_SIZE):
             line = ''
             for x in range(GAME_SIZE):
-                if (x > 0 and line[x - 1] == 'g') or (y > 0 and self.map[y - 1][x] == 'g') or ((x > 0 and y > 0) and self.map[y - 1][x - 1] == 'g'):
-                    line = line + '.'
+                if (x > 0 and self.map[x - 1] == 'g') or (y > 0 and self.map[y - 1][x] == 'g') or ((x > 0 and y > 0) and self.map[y - 1][x - 1] == 'g'):
+                    self.map[y][x] = '.'
                     continue
 
                 if x < GAME_SIZE - 2 and y > 0:
                     if self.map[y - 1][x + 1] == 'g':
-                        line = line + '.'
+                        self.map[y][x] = '.'
                         continue
 
                 if random.randint(1, 20) == 1:
-                    line = line + 't'
+                    self.map[y][x] = 't'
                     continue
                 if random.randint(1, 500) == 1:
                     if x < GAME_SIZE - 1 and y < GAME_SIZE - 1:
-                        line = line + 'g'
+                        self.map[y][x] = 'g'
                         continue
-                line = line + '.'
-            self.map.append(line)
+                self.map[y][x] = '.'
+            #self.map.append(line)
 
         for section in parser.sections():
             if len(section) == 1:
@@ -150,9 +150,7 @@ class Level(object):
             overlay.move((self.camera.x_offset, self.camera.y_offset))
             overlay.rect = overlay_image.get_rect().move(x * TILESIZE_SCALED - self.camera.x_offset, y * TILESIZE_SCALED - TILESIZE_SCALED - self.camera.y_offset)
             self.overlays.add(overlay)
-        #print(self.map)
-        #self.map[pos[0]][pos[1]] = tile_key
-
+        self.map[pos[0]][pos[1]] = tile_key
 
 
 class Camera:
