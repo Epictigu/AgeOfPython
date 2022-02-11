@@ -145,6 +145,9 @@ if __name__ == '__main__':
                         for entity in level.entities:
                             e_pos = get_pos(event.pos[0], event.pos[1])
                             entity.go_to((e_pos[0], e_pos[1]))
+                    elif event.button == 1:
+                        e_pos = get_pos(event.pos[0], event.pos[1])
+                        level.change_tile(e_pos, 'a')
             elif event.type == pygame.locals.MOUSEBUTTONUP:
                 if minimap_pressed:
                     minimap_pressed = False

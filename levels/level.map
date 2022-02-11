@@ -30,17 +30,18 @@ map = .............................t..............
 [.]
 name = floor
 tile = 0, 1
-color = 117, 217, 18
+
+[a]
+name = alternate_floor
+tile = 1, 1
 
 [t]
 name = tree
 tile = 0, 4
 tree = true
 block = true
-color = 92, 156, 28
 
 [g]
 name = goldmine
 tile = 0, 1
 sprite = GoldMine.png
-color = 255, 255, 0
