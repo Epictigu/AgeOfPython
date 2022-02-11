@@ -30,9 +30,9 @@ def redraw_selectors():
 
 def move_map(x_pos, y_pos):
     level.camera.move((int(x_pos / MINIMAP_SIZE * level.width * TILESIZE_SCALED), int(y_pos / MINIMAP_SIZE * level.height * TILESIZE_SCALED)))
-    move_sprites(sprites)
-    move_sprites(overlays)
-    move_sprites(entities)
+    move_sprites(level.sprites)
+    move_sprites(level.overlays)
+    move_sprites(level.entities)
 
 
 def check_for_edge():
@@ -69,42 +69,26 @@ if __name__ == '__main__':
 
     level = Level('level.map')
 
-    sprites = pygame.sprite.RenderUpdates()
-    for pos, tile in level.items.items():
-        sprite = Sprite(pos, SPRITE_CACHE[tile["sprite"]])
-        sprites.add(sprite)
-
     selector = pygame.sprite.RenderUpdates()
     selector.add(Sprite((0, 0), SELECTOR_CACHE["TileSelector.png"]))
 
     clock = pygame.time.Clock()
-
-    background, overlay_dict, minimap = level.render()
-    overlays = pygame.sprite.RenderUpdates()
-    for(x, y), image in overlay_dict.items():
-        overlay = Sprite((x, y), image)
-        overlay.rect = image.get_rect().move(x * TILESIZE_SCALED, y * TILESIZE_SCALED - TILESIZE_SCALED)
-        overlays.add(overlay)
-
-    minimap_distance = py.display.Info().current_h - MINIMAP_SIZE
-
-    entities = py.sprite.RenderUpdates()
-    entities.add(Entity((1, 1), "worker"))
+    background, minimap = level.pre_render()
 
     pressed_keys = []
     mouse_edge = []
     game_over = False
     minimap_pressed = False
+    minimap_distance = py.display.Info().current_h - MINIMAP_SIZE
 
     while not game_over:
         screen.blit(background, (level.camera.x_offset * -1, level.camera.y_offset * -1))
 
-        sprites.update()
-        entities.update()
+        level.update()
 
-        sprites.draw(screen)
-        overlays.draw(screen)
-        entities.draw(screen)
+        level.sprites.draw(screen)
+        level.overlays.draw(screen)
+        level.entities.draw(screen)
         selector.draw(screen)
 
         screen.blit(minimap, (0, minimap_distance))
@@ -129,9 +113,9 @@ if __name__ == '__main__':
             if py.K_RIGHT in pressed_keys or py.K_RIGHT in mouse_edge:
                 level.camera.moveRight()
             redraw_selectors()
-            move_sprites(sprites)
-            move_sprites(overlays)
-            move_sprites(entities)
+            move_sprites(level.sprites)
+            move_sprites(level.overlays)
+            move_sprites(level.entities)
 
         for event in pygame.event.get():
             if event.type == pygame.locals.QUIT:
@@ -158,7 +142,7 @@ if __name__ == '__main__':
                     minimap_pressed = True
                 else:
                     if event.button == 3:
-                        for entity in entities:
+                        for entity in level.entities:
                             e_pos = get_pos(event.pos[0], event.pos[1])
                             entity.go_to((e_pos[0], e_pos[1]))
             elif event.type == pygame.locals.MOUSEBUTTONUP:
