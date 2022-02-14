@@ -15,7 +15,6 @@ class Level(object):
         parser = configparser.ConfigParser()
         parser.read("levels/" + filename)
         self.tileset = parser.get("level", "tileset")
-        # self.map = parser.get("level", "map").split("\n")
 
         random.seed()
 
@@ -39,7 +38,6 @@ class Level(object):
                         self.map[y][x] = 'g'
                         continue
                 self.map[y][x] = '.'
-            #self.map.append(line)
 
         for section in parser.sections():
             if len(section) == 1:
@@ -64,7 +62,7 @@ class Level(object):
             sprite = Sprite(pos, SPRITE_CACHE[tile["sprite"]])
             self.sprites.add(sprite)
 
-        self.overlays_dict = {}
+        self.overlays_map = {}
         self.image = py.Surface((self.width * TILESIZE_SCALED, self.height * TILESIZE_SCALED))
         self.minimap = py.Surface((MINIMAP_SIZE, MINIMAP_SIZE))
         self.tiles = []
@@ -111,7 +109,7 @@ class Level(object):
     def pre_render(self):
         self.tiles = MAP_CACHE[self.tileset]
 
-        self.overlays_dict = {}
+        overlays_dict = {}
         for map_y, line in enumerate(self.map):
             for map_x, c in enumerate(line):
                 try:
@@ -124,14 +122,16 @@ class Level(object):
                 self.image.blit(tile_image,
                            (map_x * TILESIZE_SCALED, map_y * TILESIZE_SCALED))
                 if map_y > 0:
-                    if self.is_tree(map_x, map_y):
-                        self.overlays_dict[(map_x, map_y)] = self.tiles[0][3]
+                    if 'overlay' in self.key[c]:
+                        overlay = self.key[c]['overlay'].split(',')
+                        overlays_dict[(map_x, map_y)] = self.tiles[int(overlay[0])][int(overlay[1])]
 
         self.overlays = pygame.sprite.RenderUpdates()
-        for(x, y), overlay_image in self.overlays_dict.items():
+        for(x, y), overlay_image in overlays_dict.items():
             overlay = Sprite((x, y), overlay_image)
             overlay.rect = overlay_image.get_rect().move(x * TILESIZE_SCALED, y * TILESIZE_SCALED - TILESIZE_SCALED)
             self.overlays.add(overlay)
+            self.overlays_map[(x, y)] = overlay
 
         self.minimap = py.transform.scale(self.image.copy(), (MINIMAP_SIZE, MINIMAP_SIZE))
 
@@ -144,13 +144,16 @@ class Level(object):
         tile_image = self.tiles[tile[0]][tile[1]]
         self.image.blit(tile_image, (pos[0] * TILESIZE_SCALED, pos[1] * TILESIZE_SCALED))
 
-        self.overlays = pygame.sprite.RenderUpdates()
-        for(x, y), overlay_image in self.overlays_dict.items():
-            overlay = Sprite((x, y), overlay_image)
-            overlay.move((self.camera.x_offset, self.camera.y_offset))
-            overlay.rect = overlay_image.get_rect().move(x * TILESIZE_SCALED - self.camera.x_offset, y * TILESIZE_SCALED - TILESIZE_SCALED - self.camera.y_offset)
-            self.overlays.add(overlay)
+        if pos in self.overlays_map:
+            self.overlays.remove(self.overlays_map[pos])
         self.map[pos[0]][pos[1]] = tile_key
+
+        if 'overlay' in self.key[tile_key]:
+            overlay = self.key[tile_key]['overlay'].split(',')
+            overlay_image = self.tiles[int(overlay[0])][int(overlay[1])]
+            overlay = Sprite(pos, overlay_image)
+            overlay.rect = overlay_image.get_rect().move(pos[0] * TILESIZE_SCALED, pos[1] * TILESIZE_SCALED - TILESIZE_SCALED)
+            self.overlays.add(overlay)
 
 
 class Camera:
