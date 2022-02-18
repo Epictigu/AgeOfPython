@@ -3,10 +3,11 @@ import math
 
 from sprite import *
 from cache import *
+from level import *
 
 
 class Entity(Sprite):
-    def __init__(self, pos=(0, 0), name=None):
+    def __init__(self, level, pos=(0, 0), name=None):
         parser = configparser.ConfigParser()
         parser.read("entities/" + name + ".entity")
 
@@ -16,6 +17,7 @@ class Entity(Sprite):
         self.base_damage = parser.get("entity", "damage")
         self.speed = parser.get("entity", "speed")
         self.default_animation = parser.get("entity", "default_animation")
+        self.level = level
 
         super(Entity, self).__init__((0, 0), ENTITY_CACHE[self.texture_file])
         self.pos = pos
@@ -30,6 +32,7 @@ class Entity(Sprite):
         self.current_animation = self.key[self.default_animation]
         self.current_frame = int(self.current_animation['start'])
         self.walkwaittime = 0
+        self.cell_previous = [[(-1, -1) for i in range(GAME_SIZE)] for j in range(GAME_SIZE)]
 
     def _get_pos(self):
         return (self.rect.midbottom[0] + 2 - self.rect[2] / 2) / TILESIZE_SCALED, (self.rect.midbottom[1] + 4 - self.rect[3]) / TILESIZE_SCALED
@@ -51,53 +54,30 @@ class Entity(Sprite):
             self.walkwaittime += 1
             if self.walkwaittime == 2:
                 self.walkwaittime = 0
-                if self.get_actual_pos() != self.move_to_pos:
-                    self.move_to_next_pos()
+                self.move_to_next_pos()
 
     def setRunningAnimation(self):
-        distance_x = self.move_to_pos[0] - self.get_actual_pos()[0]
-        distance_y = self.move_to_pos[1] - self.get_actual_pos()[1]
-        if distance_x != 0 or distance_y != 0:
-            if abs(distance_x) > abs(distance_y):
-                if distance_x > 0:
-                    self.current_animation = self.key['run_right']
-                else:
-                    self.current_animation = self.key['run_left']
-            else:
-                if distance_y > 0:
-                    self.current_animation = self.key['run_down']
-                else:
-                    self.current_animation = self.key['run_up']
-        else:
+        actual_pos = self.get_actual_pos()
+        move_pos = self.cell_previous[int(actual_pos[0])][int(actual_pos[1])]
+
+        if move_pos == (-1, -1):
             self.current_animation = self.key[self.default_animation]
+            return
+
+        if move_pos[0] > self.pos[0]:
+            self.current_animation = self.key['run_right']
+        elif move_pos[0] < self.pos[0]:
+            self.current_animation = self.key['run_left']
+        elif move_pos[1] > self.pos[1]:
+            self.current_animation = self.key['run_down']
+        elif move_pos[1] < self.pos[1]:
+            self.current_animation = self.key['run_up']
 
     def move_to_next_pos(self):
-        distance_x = self.move_to_pos[0] - self.get_actual_pos()[0]
-        distance_y = self.move_to_pos[1] - self.get_actual_pos()[1]
-        if abs(distance_x) > abs(distance_y):
-            if distance_x > 0:
-                self.pos = (self.pos[0] + 1, self.pos[1])
-            else:
-                self.pos = (self.pos[0] - 1, self.pos[1])
-        elif abs(distance_x) < abs(distance_y):
-            if distance_y > 0:
-                self.pos = (self.pos[0], self.pos[1] + 1)
-            else:
-                self.pos = (self.pos[0], self.pos[1] - 1)
-        else:
-            move_x = 0
-            move_y = 0
-            if distance_x > 0:
-                move_x = 1
-            elif distance_x < 0:
-                move_x = -1
+        actual_pos = self.get_actual_pos()
+        if self.cell_previous[int(actual_pos[0])][int(actual_pos[1])] != (-1, -1):
+            self.pos = self.cell_previous[int(actual_pos[0])][int(actual_pos[1])]
 
-            if distance_y > 0:
-                move_y = 1
-            elif distance_y < 0:
-                move_y = -1
-
-            self.pos = (self.pos[0] + move_x, self.pos[1] + move_y)
         self.setRunningAnimation()
 
     def stand_animation(self):
@@ -110,5 +90,38 @@ class Entity(Sprite):
             yield None
 
     def go_to(self, pos):
-        self.move_to_pos = pos
+        self.calc_path(pos)
         self.setRunningAnimation()
+
+    def calc_path(self, pos):
+        open_fields = [pos]
+        cell_count = [[-1 for i in range(GAME_SIZE)] for j in range(GAME_SIZE)]
+        cell_previous = [[(-1, -1) for i in range(GAME_SIZE)] for j in range(GAME_SIZE)]
+        cell_count[pos[0]][pos[1]] = 0
+
+        while open_fields:
+            cur_pos = open_fields.pop(0)
+
+            neighbors = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+            for neighbor in neighbors:
+                n_pos = (cur_pos[0] + neighbor[0], cur_pos[1] + neighbor[1])
+                if not self.level.is_valid_point(n_pos):
+                    continue
+
+                if self.level.is_blocking(n_pos[0], n_pos[1]):
+                    continue
+
+                dist = cell_count[cur_pos[0]][cur_pos[1]] + 1
+                old_dist = cell_count[n_pos[0]][n_pos[1]]
+                if old_dist > dist or old_dist == -1:
+                    cell_count[n_pos[0]][n_pos[1]] = dist
+                    cell_previous[n_pos[0]][n_pos[1]] = cur_pos
+
+                    if n_pos == self.pos:
+                        print("Pfad gefunden!")
+                        open_fields.clear()
+                        break
+                    open_fields.append(n_pos)
+        self.cell_previous = cell_previous
+
+

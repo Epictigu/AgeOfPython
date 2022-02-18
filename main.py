@@ -31,7 +31,7 @@ def redraw_selectors():
 def move_map(x_pos, y_pos):
     level.camera.move((int(x_pos / MINIMAP_SIZE * level.width * TILESIZE_SCALED), int(y_pos / MINIMAP_SIZE * level.height * TILESIZE_SCALED)))
     move_sprites(level.sprites)
-    move_sprites(level.overlays)
+    # move_sprites(level.overlays)
     move_sprites(level.entities)
 
 
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     selector.add(Sprite((0, 0), SELECTOR_CACHE["TileSelector.png"]))
 
     clock = pygame.time.Clock()
-    background, minimap = level.pre_render()
+    background, overlay, minimap = level.pre_render()
 
     pressed_keys = []
     mouse_edge = []
@@ -83,11 +83,11 @@ if __name__ == '__main__':
 
     while not game_over:
         screen.blit(background, (level.camera.x_offset * -1, level.camera.y_offset * -1))
+        screen.blit(overlay, (level.camera.x_offset * -1, level.camera.y_offset * -1))
 
         level.update()
 
         level.sprites.draw(screen)
-        level.overlays.draw(screen)
         level.entities.draw(screen)
         selector.draw(screen)
 
@@ -114,7 +114,6 @@ if __name__ == '__main__':
                 level.camera.moveRight()
             redraw_selectors()
             move_sprites(level.sprites)
-            move_sprites(level.overlays)
             move_sprites(level.entities)
 
         for event in pygame.event.get():
@@ -147,7 +146,7 @@ if __name__ == '__main__':
                             entity.go_to((e_pos[0], e_pos[1]))
                     elif event.button == 1:
                         e_pos = get_pos(event.pos[0], event.pos[1])
-                        level.change_tile(e_pos, 't')
+                        level.change_tile(e_pos, 'a')
             elif event.type == pygame.locals.MOUSEBUTTONUP:
                 if minimap_pressed:
                     minimap_pressed = False

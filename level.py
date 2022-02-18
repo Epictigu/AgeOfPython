@@ -4,6 +4,7 @@ import pygame as py
 import pygame.sprite
 
 from entity import *
+from sprite import *
 from settings import *
 from cache import *
 
@@ -19,7 +20,6 @@ class Level(object):
         random.seed()
 
         for y in range(GAME_SIZE):
-            line = ''
             for x in range(GAME_SIZE):
                 if (x > 0 and self.map[x - 1] == 'g') or (y > 0 and self.map[y - 1][x] == 'g') or ((x > 0 and y > 0) and self.map[y - 1][x - 1] == 'g'):
                     self.map[y][x] = '.'
@@ -30,7 +30,7 @@ class Level(object):
                         self.map[y][x] = '.'
                         continue
 
-                if random.randint(1, 20) == 1:
+                if random.randint(1, 4) == 1:
                     self.map[y][x] = 't'
                     continue
                 if random.randint(1, 500) == 1:
@@ -52,18 +52,16 @@ class Level(object):
                     self.items[(x, y)] = self.key[c]
         self.camera = Camera(self)
 
-        self.overlays = pygame.sprite.RenderUpdates()
-
         self.entities = py.sprite.RenderUpdates()
-        self.entities.add(Entity((1, 1), "worker"))
+        self.entities.add(Entity(self, (1, 1), "worker"))
 
         self.sprites = pygame.sprite.RenderUpdates()
         for pos, tile in self.items.items():
             sprite = Sprite(pos, SPRITE_CACHE[tile["sprite"]])
             self.sprites.add(sprite)
 
-        self.overlays_map = {}
         self.image = py.Surface((self.width * TILESIZE_SCALED, self.height * TILESIZE_SCALED))
+        self.overlay_image = py.Surface((self.width * TILESIZE_SCALED, self.height * TILESIZE_SCALED), pygame.SRCALPHA)
         self.minimap = py.Surface((MINIMAP_SIZE, MINIMAP_SIZE))
         self.tiles = []
 
@@ -116,7 +114,6 @@ class Level(object):
                     tile = self.key[c]['tile'].split(',')
                     tile = int(tile[0]), int(tile[1])
                 except (ValueError, KeyError):
-                    # Default to ground tile
                     tile = 0, 0
                 tile_image = self.tiles[tile[0]][tile[1]]
                 self.image.blit(tile_image,
@@ -126,34 +123,42 @@ class Level(object):
                         overlay = self.key[c]['overlay'].split(',')
                         overlays_dict[(map_x, map_y)] = self.tiles[int(overlay[0])][int(overlay[1])]
 
-        self.overlays = pygame.sprite.RenderUpdates()
         for(x, y), overlay_image in overlays_dict.items():
-            overlay = Sprite((x, y), overlay_image)
-            overlay.rect = overlay_image.get_rect().move(x * TILESIZE_SCALED, y * TILESIZE_SCALED - TILESIZE_SCALED)
-            self.overlays.add(overlay)
-            self.overlays_map[(x, y)] = overlay
+            self.overlay_image.blit(overlay_image, (x * TILESIZE_SCALED, (y - 1) * TILESIZE_SCALED))
 
         self.minimap = py.transform.scale(self.image.copy(), (MINIMAP_SIZE, MINIMAP_SIZE))
 
-        return self.image, self.minimap
+        return self.image, self.overlay_image, self.minimap
 
     def change_tile(self, pos, tile_key):
+        old_key = self.map[pos[1]][pos[0]]
+
         tile = self.key[tile_key]['tile'].split(', ')
         tile = int(tile[0]), int(tile[1])
 
         tile_image = self.tiles[tile[0]][tile[1]]
         self.image.blit(tile_image, (pos[0] * TILESIZE_SCALED, pos[1] * TILESIZE_SCALED))
 
-        if pos in self.overlays_map:
-            self.overlays.remove(self.overlays_map[pos])
-        self.map[pos[0]][pos[1]] = tile_key
+        print(old_key)
+        print(self.key[old_key])
+        print(self.map[pos[0]])
+        if 'overlay' in self.key[old_key]:
+            py.draw.rect(self.overlay_image, (0, 0, 0, 0), py.Rect(pos[0] * TILESIZE_SCALED, (pos[1] - 1) * TILESIZE_SCALED, TILESIZE_SCALED, TILESIZE_SCALED))
+            # self.overlays.remove(self.overlays_map[pos])
+        self.map[pos[1]][pos[0]] = tile_key
 
         if 'overlay' in self.key[tile_key]:
             overlay = self.key[tile_key]['overlay'].split(',')
             overlay_image = self.tiles[int(overlay[0])][int(overlay[1])]
-            overlay = Sprite(pos, overlay_image)
-            overlay.rect = overlay_image.get_rect().move(pos[0] * TILESIZE_SCALED, pos[1] * TILESIZE_SCALED - TILESIZE_SCALED)
-            self.overlays.add(overlay)
+            # overlay = Sprite(pos, overlay_image)
+            # overlay.rect = overlay_image.get_rect().move(pos[0] * TILESIZE_SCALED, pos[1] * TILESIZE_SCALED - TILESIZE_SCALED)
+            # self.overlays.add(overlay)
+            self.overlay_image.blit(overlay_image, (pos[0] * TILESIZE_SCALED, (pos[1] - 1) * TILESIZE_SCALED))
+
+    def is_valid_point(self, pos):
+        if 0 <= pos[0] < GAME_SIZE and 0 <= pos[1] < GAME_SIZE:
+            return True
+        return False
 
 
 class Camera:
