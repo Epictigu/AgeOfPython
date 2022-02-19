@@ -64,19 +64,20 @@ class Entity(Sprite):
             self.current_animation = self.key[self.default_animation]
             return
 
-        if move_pos[0] > self.pos[0]:
+        if move_pos[0] > self.get_actual_pos()[0]:
             self.current_animation = self.key['run_right']
-        elif move_pos[0] < self.pos[0]:
+        elif move_pos[0] < self.get_actual_pos()[0]:
             self.current_animation = self.key['run_left']
-        elif move_pos[1] > self.pos[1]:
+        elif move_pos[1] > self.get_actual_pos()[1]:
             self.current_animation = self.key['run_down']
-        elif move_pos[1] < self.pos[1]:
+        elif move_pos[1] < self.get_actual_pos()[1]:
             self.current_animation = self.key['run_up']
 
     def move_to_next_pos(self):
         actual_pos = self.get_actual_pos()
         if self.cell_previous[int(actual_pos[0])][int(actual_pos[1])] != (-1, -1):
-            self.pos = self.cell_previous[int(actual_pos[0])][int(actual_pos[1])]
+            new_pos = self.cell_previous[int(actual_pos[0])][int(actual_pos[1])]
+            self.pos = (new_pos[0] - self.offset[0] / TILESIZE_SCALED, new_pos[1] - self.offset[1] / TILESIZE_SCALED)
 
         self.setRunningAnimation()
 
