@@ -7,6 +7,7 @@ from entity import *
 from sprite import *
 from settings import *
 from cache import *
+from building import *
 
 
 class Level(object):
@@ -54,6 +55,9 @@ class Level(object):
 
         self.entities = py.sprite.RenderUpdates()
         self.entities.add(Entity(self, (1, 1), "worker"))
+
+        self.buildings = py.sprite.RenderUpdates()
+        self.buildings.add(Building(self, (10, 10), "town_hall"))
 
         self.sprites = pygame.sprite.RenderUpdates()
         for pos, tile in self.items.items():
@@ -139,20 +143,13 @@ class Level(object):
         tile_image = self.tiles[tile[0]][tile[1]]
         self.image.blit(tile_image, (pos[0] * TILESIZE_SCALED, pos[1] * TILESIZE_SCALED))
 
-        print(old_key)
-        print(self.key[old_key])
-        print(self.map[pos[0]])
         if 'overlay' in self.key[old_key]:
             py.draw.rect(self.overlay_image, (0, 0, 0, 0), py.Rect(pos[0] * TILESIZE_SCALED, (pos[1] - 1) * TILESIZE_SCALED, TILESIZE_SCALED, TILESIZE_SCALED))
-            # self.overlays.remove(self.overlays_map[pos])
         self.map[pos[1]][pos[0]] = tile_key
 
         if 'overlay' in self.key[tile_key]:
             overlay = self.key[tile_key]['overlay'].split(',')
             overlay_image = self.tiles[int(overlay[0])][int(overlay[1])]
-            # overlay = Sprite(pos, overlay_image)
-            # overlay.rect = overlay_image.get_rect().move(pos[0] * TILESIZE_SCALED, pos[1] * TILESIZE_SCALED - TILESIZE_SCALED)
-            # self.overlays.add(overlay)
             self.overlay_image.blit(overlay_image, (pos[0] * TILESIZE_SCALED, (pos[1] - 1) * TILESIZE_SCALED))
 
     def is_valid_point(self, pos):

@@ -1,0 +1,9 @@
+[building]
+name = Town Hall
+texture = tileset.png
+tile = 0, 15
+width = 2
+height = 2
+health = 100
+cost_gold = 400
+cost_wood = 350

@@ -31,8 +31,8 @@ def redraw_selectors():
 def move_map(x_pos, y_pos):
     level.camera.move((int(x_pos / MINIMAP_SIZE * level.width * TILESIZE_SCALED), int(y_pos / MINIMAP_SIZE * level.height * TILESIZE_SCALED)))
     move_sprites(level.sprites)
-    # move_sprites(level.overlays)
     move_sprites(level.entities)
+    move_sprites(level.buildings)
 
 
 def check_for_edge():
@@ -88,6 +88,7 @@ if __name__ == '__main__':
         level.update()
 
         level.sprites.draw(screen)
+        level.buildings.draw(screen)
         level.entities.draw(screen)
         selector.draw(screen)
 
@@ -115,6 +116,7 @@ if __name__ == '__main__':
             redraw_selectors()
             move_sprites(level.sprites)
             move_sprites(level.entities)
+            move_sprites(level.buildings)
 
         for event in pygame.event.get():
             if event.type == pygame.locals.QUIT:

@@ -119,7 +119,6 @@ class Entity(Sprite):
                     cell_previous[n_pos[0]][n_pos[1]] = cur_pos
 
                     if n_pos == self.pos:
-                        print("Pfad gefunden!")
                         open_fields.clear()
                         break
                     open_fields.append(n_pos)

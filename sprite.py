@@ -3,7 +3,7 @@ from settings import *
 
 
 class Sprite(py.sprite.Sprite):
-    def __init__(self, pos=(0, 0), frames=None):
+    def __init__(self, pos=(0, 0), frames=None, framepos=(0, 0)):
         super(Sprite, self).__init__()
         self.frames = frames
         self.animation = self.stand_animation()
@@ -11,7 +11,7 @@ class Sprite(py.sprite.Sprite):
             if type(frames) == py.Surface:
                 self.image = frames
             else:
-                self.image = frames[0][0]
+                self.image = frames[framepos[0]][framepos[1]]
         self.rect = self.image.get_rect()
         self.offset = (0, 0)
         self.pos = pos
