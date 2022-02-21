@@ -224,7 +224,7 @@ class Level(object):
 class Camera:
     def __init__(self, level):
         self.width = py.display.Info().current_w
-        self.height = py.display.Info().current_h
+        self.height = py.display.Info().current_h - MINIMAP_SIZE
 
         self.x_offset = 0
         self.y_offset = 0

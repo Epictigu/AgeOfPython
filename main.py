@@ -13,7 +13,7 @@ def redraw_selectors():
     for s in selector.sprites():
         mouse_pos = pygame.mouse.get_pos()
 
-        if mouse_pos[0] < MINIMAP_SIZE and mouse_pos[1] > py.display.Info().current_h - MINIMAP_SIZE:
+        if mouse_pos[1] > py.display.Info().current_h - MINIMAP_SIZE:
             s.pos = (-1, -1)
         else:
             xpos_offset = level.camera.x_offset % TILESIZE_SCALED
@@ -66,6 +66,8 @@ def get_pos(x, y):
 
 if __name__ == '__main__':
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    main_surface = py.Surface((screen.get_width(), screen.get_height() - MINIMAP_SIZE))
+    main_surface.blit
 
     py.init()
     font = pygame.font.Font('freesansbold.ttf', 80)
@@ -91,24 +93,26 @@ if __name__ == '__main__':
     minimap_distance = py.display.Info().current_h - MINIMAP_SIZE
 
     while not game_over:
-        screen.blit(background, (level.camera.x_offset * -1, level.camera.y_offset * -1))
-        screen.blit(overlay, (level.camera.x_offset * -1, level.camera.y_offset * -1))
+        main_surface.blit(background, (level.camera.x_offset * -1, level.camera.y_offset * -1))
+        main_surface.blit(overlay, (level.camera.x_offset * -1, level.camera.y_offset * -1))
 
         level.update()
 
-        level.sprites.draw(screen)
-        level.buildings.draw(screen)
-        level.entities.draw(screen)
-        selector.draw(screen)
+        level.sprites.draw(main_surface)
+        level.buildings.draw(main_surface)
+        level.entities.draw(main_surface)
+        selector.draw(main_surface)
 
         screen.blit(minimap, (0, minimap_distance))
 
         minimap_x = (py.display.Info().current_w / background.get_width() * level.camera.x_offset) / py.display.Info().current_w * MINIMAP_SIZE
-        minimap_y = (py.display.Info().current_h / background.get_height() * level.camera.y_offset) / py.display.Info().current_h * MINIMAP_SIZE
+        minimap_y = ((py.display.Info().current_h - MINIMAP_SIZE) / background.get_height() * level.camera.y_offset) / (py.display.Info().current_h - MINIMAP_SIZE) * MINIMAP_SIZE
         minimap_width = (py.display.Info().current_w / background.get_width() * (level.camera.x_offset + py.display.Info().current_w) / py.display.Info().current_w * MINIMAP_SIZE - minimap_x)
-        minimap_height = (py.display.Info().current_h / background.get_height() * (level.camera.y_offset + py.display.Info().current_h) / py.display.Info().current_h * MINIMAP_SIZE - minimap_y)
+        minimap_height = ((py.display.Info().current_h - MINIMAP_SIZE) / background.get_height() * (level.camera.y_offset + py.display.Info().current_h - MINIMAP_SIZE) / (py.display.Info().current_h - MINIMAP_SIZE) * MINIMAP_SIZE - minimap_y)
 
         py.draw.rect(screen, py.Color(255, 255, 255), (minimap_x, minimap_y + minimap_distance, minimap_width, minimap_height), 1)
+
+        screen.blit(main_surface, (0, 0))
 
         pygame.display.flip()
         clock.tick(60)
