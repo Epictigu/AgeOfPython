@@ -13,14 +13,14 @@ def redraw_selectors():
     for s in selector.sprites():
         mouse_pos = pygame.mouse.get_pos()
 
-        if mouse_pos[1] > py.display.Info().current_h - MINIMAP_SIZE:
+        if mouse_pos[1] > py.display.Info().current_h - MINIMAP_SIZE or mouse_pos[1] <= 32:
             s.pos = (-1, -1)
         else:
             xpos_offset = level.camera.x_offset % TILESIZE_SCALED
             ypos_offset = level.camera.y_offset % TILESIZE_SCALED
 
             xpos = int((mouse_pos[0] + xpos_offset) / TILESIZE_SCALED) - xpos_offset / TILESIZE_SCALED
-            ypos = int((mouse_pos[1] + ypos_offset) / TILESIZE_SCALED) - ypos_offset / TILESIZE_SCALED
+            ypos = int((mouse_pos[1] - 32 + ypos_offset) / TILESIZE_SCALED) - ypos_offset / TILESIZE_SCALED
             if xpos >= level.width:
                 xpos = level.width - 1
             if ypos >= level.height:
@@ -66,8 +66,7 @@ def get_pos(x, y):
 
 if __name__ == '__main__':
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-    main_surface = py.Surface((screen.get_width(), screen.get_height() - MINIMAP_SIZE))
-    main_surface.blit
+    main_surface = py.Surface((screen.get_width(), screen.get_height() - MINIMAP_SIZE - 32))
 
     py.init()
     font = pygame.font.Font('freesansbold.ttf', 80)
@@ -92,6 +91,22 @@ if __name__ == '__main__':
     minimap_pressed = False
     minimap_distance = py.display.Info().current_h - MINIMAP_SIZE
 
+    background_image = py.Surface((screen.get_width() - MINIMAP_SIZE, MINIMAP_SIZE))
+    background_tile_image = level.tiles[level.background_tile[0]][level.background_tile[1]]
+    x = 0
+    while x < screen.get_width() - MINIMAP_SIZE:
+        y = 0
+        while y < MINIMAP_SIZE:
+            background_image.blit(background_tile_image, (x, y))
+            y += 32
+        x += 32
+
+    header_image = py.Surface((screen.get_width(), 32))
+    x = 0
+    while x < screen.get_width():
+        header_image.blit(background_tile_image, (x, 0))
+        x += 32
+
     while not game_over:
         main_surface.blit(background, (level.camera.x_offset * -1, level.camera.y_offset * -1))
         main_surface.blit(overlay, (level.camera.x_offset * -1, level.camera.y_offset * -1))
@@ -112,7 +127,9 @@ if __name__ == '__main__':
 
         py.draw.rect(screen, py.Color(255, 255, 255), (minimap_x, minimap_y + minimap_distance, minimap_width, minimap_height), 1)
 
-        screen.blit(main_surface, (0, 0))
+        screen.blit(main_surface, (0, 32))
+        screen.blit(background_image, (MINIMAP_SIZE, screen.get_height() - MINIMAP_SIZE))
+        screen.blit(header_image, (0, 0))
 
         pygame.display.flip()
         clock.tick(60)
@@ -144,14 +161,14 @@ if __name__ == '__main__':
                 redraw_selectors()
                 if minimap_pressed:
                     x_pos = event.pos[0]
-                    y_pos = event.pos[1] - (py.display.Info().current_h - MINIMAP_SIZE)
+                    y_pos = event.pos[1] - (py.display.Info().current_h - MINIMAP_SIZE) + 32
                     move_map(x_pos, y_pos)
                 else:
                     check_for_edge()
             elif event.type == pygame.locals.MOUSEBUTTONDOWN:
                 if event.pos[1] >= py.display.Info().current_h - MINIMAP_SIZE and event.pos[0] <= MINIMAP_SIZE:
                     x_pos = event.pos[0]
-                    y_pos = event.pos[1] - (py.display.Info().current_h - MINIMAP_SIZE)
+                    y_pos = event.pos[1] - (py.display.Info().current_h - MINIMAP_SIZE) + 32
                     move_map(x_pos, y_pos)
                     minimap_pressed = True
                 else:

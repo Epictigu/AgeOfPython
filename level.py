@@ -18,6 +18,9 @@ class Level(object):
         parser.read("levels/" + filename)
         self.tileset = parser.get("level", "tileset")
 
+        self.background_tile = parser.get("level", "background_tile").split(',')
+        self.background_tile = (int(self.background_tile[0]), int(self.background_tile[1]))
+
         self.width = GAME_SIZE
         self.height = GAME_SIZE
 

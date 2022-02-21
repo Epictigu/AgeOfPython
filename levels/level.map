@@ -1,5 +1,6 @@
 [level]
 tileset = tileset.png
+background_tile = 6, 1
 
 [.]
 name = floor
