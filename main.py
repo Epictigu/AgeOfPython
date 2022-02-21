@@ -67,6 +67,15 @@ def get_pos(x, y):
 if __name__ == '__main__':
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
+    py.init()
+    font = pygame.font.Font('freesansbold.ttf', 80)
+    img = font.render("Karte wird generiert ...", True, (255, 255, 255))
+
+    text_rect = img.get_rect(center=(screen.get_width() / 2, screen.get_height() / 2))
+
+    screen.blit(img, text_rect)
+    pygame.display.flip()
+
     level = Level('level.map')
 
     selector = pygame.sprite.RenderUpdates()

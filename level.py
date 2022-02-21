@@ -18,46 +18,26 @@ class Level(object):
         parser.read("levels/" + filename)
         self.tileset = parser.get("level", "tileset")
 
+        self.width = GAME_SIZE
+        self.height = GAME_SIZE
+
         random.seed()
 
-        for y in range(GAME_SIZE):
-            for x in range(GAME_SIZE):
-                if (x > 0 and self.map[x - 1] == 'g') or (y > 0 and self.map[y - 1][x] == 'g') or ((x > 0 and y > 0) and self.map[y - 1][x - 1] == 'g'):
-                    self.map[y][x] = '.'
-                    continue
+        self.entities = py.sprite.RenderUpdates()
+        self.buildings = py.sprite.RenderUpdates()
 
-                if x < GAME_SIZE - 2 and y > 0:
-                    if self.map[y - 1][x + 1] == 'g':
-                        self.map[y][x] = '.'
-                        continue
-
-                if random.randint(1, 4) == 1:
-                    self.map[y][x] = 't'
-                    continue
-                if random.randint(1, 500) == 1:
-                    if x < GAME_SIZE - 1 and y < GAME_SIZE - 1:
-                        self.map[y][x] = 'g'
-                        continue
-                self.map[y][x] = '.'
+        self.generate()
 
         for section in parser.sections():
             if len(section) == 1:
                 desc = dict(parser.items(section))
                 self.key[section] = desc
-        self.width = len(self.map[0])
-        self.height = len(self.map)
         self.items = {}
         for y, line in enumerate(self.map):
             for x, c in enumerate(line):
                 if 'sprite' in self.key[c]:
                     self.items[(x, y)] = self.key[c]
         self.camera = Camera(self)
-
-        self.entities = py.sprite.RenderUpdates()
-        self.entities.add(Entity(self, (1, 1), "worker"))
-
-        self.buildings = py.sprite.RenderUpdates()
-        self.buildings.add(Building(self, (10, 10), "town_hall"))
 
         self.sprites = pygame.sprite.RenderUpdates()
         for pos, tile in self.items.items():
@@ -68,6 +48,83 @@ class Level(object):
         self.overlay_image = py.Surface((self.width * TILESIZE_SCALED, self.height * TILESIZE_SCALED), pygame.SRCALPHA)
         self.minimap = py.Surface((MINIMAP_SIZE, MINIMAP_SIZE))
         self.tiles = []
+
+    def generate(self):
+        available_pos = []
+        for y in range(GAME_SIZE):
+            for x in range(GAME_SIZE):
+                available_pos.append((y, x))
+
+        for y in range(GAME_SIZE):
+            for x in range(GAME_SIZE):
+                if y < 4 or y >= GAME_SIZE - 4 or x < 4 or x >= GAME_SIZE - 4 or x * y < 80 or (GAME_SIZE - x) * (GAME_SIZE - y) < 80 or (GAME_SIZE - x) * y < 80 or x * (GAME_SIZE - y) < 80:
+                    self.map[y][x] = 't'
+                    if (y, x) in available_pos:
+                        available_pos.remove((y, x))
+
+        gold_row = [14, int(GAME_SIZE / 2), GAME_SIZE - 15]
+        gold_column = [8, int(GAME_SIZE / 2), GAME_SIZE - 9]
+
+        for x in gold_row:
+            for y in gold_column:
+                self.map[y][x] = 'g'
+                for offset_x in range(-10, 12):
+                    for offset_y in range(-10, 12):
+                        if (x + offset_x, y + offset_y) in available_pos:
+                            available_pos.remove((x + offset_x, y + offset_y))
+
+        self.buildings.add(Building(self, (14, 13), "town_hall"))
+        self.buildings.add(Building(self, (GAME_SIZE - 15, GAME_SIZE - 14), "town_hall"))
+
+        self.entities.add(Entity(self, (13, 12), "worker"))
+        self.entities.add(Entity(self, (14, 12), "worker"))
+        self.entities.add(Entity(self, (15, 12), "worker"))
+        self.entities.add(Entity(self, (16, 12), "worker"))
+
+        self.entities.add(Entity(self, (GAME_SIZE - 16, GAME_SIZE - 12), "worker"))
+        self.entities.add(Entity(self, (GAME_SIZE - 15, GAME_SIZE - 12), "worker"))
+        self.entities.add(Entity(self, (GAME_SIZE - 14, GAME_SIZE - 12), "worker"))
+        self.entities.add(Entity(self, (GAME_SIZE - 13, GAME_SIZE - 12), "worker"))
+
+        while len(available_pos):
+            center_pos = available_pos[random.randint(0, len(available_pos) - 1)]
+            center_range = 0
+            continue_expanding = True
+            while center_range < 10 and (center_range < 5 or random.randint(0, 1) == 0) and continue_expanding:
+                new_range = center_range + 1
+                for y in range(new_range * -1, new_range + 1):
+                    for x in range(new_range * -1, new_range + 1):
+                        if (center_pos[0] + y, center_pos[1] + x) not in available_pos:
+                            continue_expanding = False
+                            break
+                    if not continue_expanding:
+                        break
+                if continue_expanding:
+                    center_range = new_range
+            if center_range < 3:
+                available_pos.remove(center_pos)
+                continue
+            for y in range(center_range * -1, center_range + 1):
+                for x in range(center_range * -1, center_range + 1):
+                    available_pos.remove((center_pos[0] + y, center_pos[1] + x))
+
+            width = int(center_range / 2 + random.uniform(0, center_range / 2))
+            height = int(center_range / 2 + random.uniform(0, center_range / 2))
+
+            first_width = int((width * 2 + 1) / 2 + random.uniform(0, (width * 2 + 1)))
+            first_height = int((height * 2 + 1) / 2 + random.uniform(0, (width * 2 + 1)))
+
+            for y in range(height * -1, height + 1):
+                for x in range(width * -1, width + 1):
+                    if abs(x) == width and abs(y) == height:
+                        continue
+                    self.map[center_pos[1] + y][center_pos[0] + x] = 't'
+
+        for x in range(GAME_SIZE):
+            for y in range(GAME_SIZE):
+                if not self.is_blocking(y, x):
+                    if random.randint(0, 20) == 0:
+                        self.map[y][x] = 't'
 
     def update(self):
         self.sprites.update()
@@ -106,7 +163,13 @@ class Level(object):
 
         if not 0 <= x < self.width or not 0 <= y < self.height:
             return True
-        return self.get_bool(x, y, 'block')
+        if self.get_bool(x, y, 'block'):
+            return True
+        for e in self.entities.sprites():
+            if e.get_actual_pos()[0] == x and e.get_actual_pos()[1] == y:
+                return True
+
+        return False
 
     def pre_render(self):
         self.tiles = MAP_CACHE[self.tileset]
