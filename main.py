@@ -98,14 +98,17 @@ if __name__ == '__main__':
         y = 0
         while y < MINIMAP_SIZE:
             background_image.blit(background_tile_image, (x, y))
-            y += 32
-        x += 32
+            y += TILESIZE_SCALED
+        x += TILESIZE_SCALED
 
-    header_image = py.Surface((screen.get_width(), 32))
+    header_image = py.Surface((screen.get_width(), TILESIZE_SCALED))
     x = 0
     while x < screen.get_width():
         header_image.blit(background_tile_image, (x, 0))
-        x += 32
+        x += TILESIZE_SCALED
+
+    selection_start = (-1, -1)
+    selection_end = (-1, -1)
 
     while not game_over:
         main_surface.blit(background, (level.camera.x_offset * -1, level.camera.y_offset * -1))
@@ -128,6 +131,18 @@ if __name__ == '__main__':
         py.draw.rect(screen, py.Color(255, 255, 255), (minimap_x, minimap_y + minimap_distance, minimap_width, minimap_height), 1)
 
         screen.blit(main_surface, (0, 32))
+
+        if selection_start != (-1, -1):
+            width = selection_end[0] - selection_start[0]
+            height = selection_end[1] - selection_start[1]
+            x = selection_start[0] - level.camera.x_offset
+            y = selection_start[1] - level.camera.y_offset
+            if width < 0:
+                x = x + width
+            if height < 0:
+                y = y + height
+            py.draw.rect(screen, py.Color(255, 255, 255), (x, y, abs(width), abs(height)), 1)
+
         screen.blit(background_image, (MINIMAP_SIZE, screen.get_height() - MINIMAP_SIZE))
         screen.blit(header_image, (0, 0))
 
@@ -165,22 +180,30 @@ if __name__ == '__main__':
                     move_map(x_pos, y_pos)
                 else:
                     check_for_edge()
+                    if selection_start != (-1, -1):
+                        selection_end = (event.pos[0] + level.camera.x_offset, event.pos[1] + level.camera.y_offset)
             elif event.type == pygame.locals.MOUSEBUTTONDOWN:
                 if event.pos[1] >= py.display.Info().current_h - MINIMAP_SIZE and event.pos[0] <= MINIMAP_SIZE:
                     x_pos = event.pos[0]
                     y_pos = event.pos[1] - (py.display.Info().current_h - MINIMAP_SIZE) + 32
                     move_map(x_pos, y_pos)
                     minimap_pressed = True
+                elif event.pos[1] <= 32:
+                    print("TODO: Menü")
                 else:
                     if event.button == 3:
-                        for entity in level.entities:
-                            e_pos = get_pos(event.pos[0], event.pos[1])
+                        for entity in level.selected_entities:
+                            e_pos = get_pos(event.pos[0], event.pos[1] - 32)
                             entity.go_to((e_pos[0], e_pos[1]))
                     elif event.button == 1:
-                        e_pos = get_pos(event.pos[0], event.pos[1])
-                        level.change_tile(e_pos, 'a')
+                        e_pos = get_pos(event.pos[0], event.pos[1] - 32)
+                        selection_start = (event.pos[0] + level.camera.x_offset, event.pos[1] + level.camera.y_offset)
+                        selection_end = selection_start
             elif event.type == pygame.locals.MOUSEBUTTONUP:
                 if minimap_pressed:
                     minimap_pressed = False
+                elif selection_start != (-1, -1):
+                    level.select_entities(get_pos(selection_start[0] - level.camera.x_offset, selection_start[1] - level.camera.y_offset - 32), get_pos(selection_end[0] - level.camera.x_offset, selection_end[1] - level.camera.y_offset - 32))
+                    selection_start = (-1, -1)
 
 

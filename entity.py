@@ -85,7 +85,7 @@ class Entity(Sprite):
                 self.blocked_counter = 0
             else:
                 self.blocked_counter += 1
-                if self.blocked_counter == 10:
+                if self.blocked_counter >= 5:
                     self.calc_path(self.last_requested_position)
 
         self.setRunningAnimation()

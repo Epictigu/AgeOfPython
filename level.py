@@ -27,6 +27,7 @@ class Level(object):
         random.seed()
 
         self.entities = py.sprite.RenderUpdates()
+        self.selected_entities = []
         self.buildings = py.sprite.RenderUpdates()
 
         self.generate()
@@ -51,6 +52,31 @@ class Level(object):
         self.overlay_image = py.Surface((self.width * TILESIZE_SCALED, self.height * TILESIZE_SCALED), pygame.SRCALPHA)
         self.minimap = py.Surface((MINIMAP_SIZE, MINIMAP_SIZE))
         self.tiles = []
+
+    def select_entity(self, pos):
+        self.selected_entities.clear()
+        for e in self.entities.sprites():
+            if e.get_actual_pos() == pos:
+                self.selected_entities.append(e)
+
+    def select_entities(self, pos1, pos2):
+        lower_x = pos1[0]
+        higher_x = pos2[0]
+        if lower_x > higher_x:
+            lower_x = pos2[0]
+            higher_x = pos1[0]
+        lower_y = pos1[1]
+        higher_y = pos2[1]
+        if lower_y > higher_y:
+            lower_y = pos2[1]
+            higher_y = pos1[1]
+
+        self.selected_entities.clear()
+        for e in self.entities.sprites():
+            e_pos = e.get_actual_pos()
+            if lower_x <= e_pos[0] <= higher_x:
+                if lower_y <= e_pos[1] <= higher_y:
+                    self.selected_entities.append(e)
 
     def generate(self):
         available_pos = []
