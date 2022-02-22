@@ -110,6 +110,7 @@ if __name__ == '__main__':
     selection_start = (-1, -1)
     selection_end = (-1, -1)
 
+    header_font = pygame.font.Font('freesansbold.ttf', 20)
     while not game_over:
         main_surface.blit(background, (level.camera.x_offset * -1, level.camera.y_offset * -1))
         main_surface.blit(overlay, (level.camera.x_offset * -1, level.camera.y_offset * -1))
@@ -145,6 +146,20 @@ if __name__ == '__main__':
 
         screen.blit(background_image, (MINIMAP_SIZE, screen.get_height() - MINIMAP_SIZE))
         screen.blit(header_image, (0, 0))
+
+        gold_img = header_font.render("Gold: " + str(level.player.gold), True, (255, 255, 255))
+        gold_rect = gold_img.get_rect(center=(screen.get_width() / 2, 16))
+        screen.blit(gold_img, (32, gold_rect[1]))
+
+        wood_img = header_font.render("Holz: " + str(level.player.wood), True, (255, 255, 255))
+        wood_rect = gold_img.get_rect(center=(screen.get_width() / 2, 16))
+        screen.blit(wood_img, (300, gold_rect[1]))
+
+        exit_img = header_font.render("Spiel beenden", True, (255, 255, 255))
+        exit_rect = exit_img.get_rect(center=(screen.get_width() / 2, 16))
+
+        py.draw.rect(screen, py.Color(255, 0, 0), (screen.get_width() - exit_rect.width - 32, 0, screen.get_width(), 32))
+        screen.blit(exit_img, (screen.get_width() - exit_rect.width - 16, exit_rect[1]))
 
         pygame.display.flip()
         clock.tick(60)
@@ -189,7 +204,8 @@ if __name__ == '__main__':
                     move_map(x_pos, y_pos)
                     minimap_pressed = True
                 elif event.pos[1] <= 32:
-                    print("TODO: Menü")
+                    if event.pos[0] > screen.get_width() - exit_rect.width - 32:
+                        game_over = True
                 else:
                     if event.button == 3:
                         for entity in level.selected_entities:

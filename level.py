@@ -8,6 +8,7 @@ from sprite import *
 from settings import *
 from cache import *
 from building import *
+from player import *
 
 
 class Level(object):
@@ -20,6 +21,9 @@ class Level(object):
 
         self.background_tile = parser.get("level", "background_tile").split(',')
         self.background_tile = (int(self.background_tile[0]), int(self.background_tile[1]))
+
+        self.player = Player()
+        self.ai = Player()
 
         self.width = GAME_SIZE
         self.height = GAME_SIZE
@@ -56,6 +60,8 @@ class Level(object):
     def select_entity(self, pos):
         self.selected_entities.clear()
         for e in self.entities.sprites():
+            if e.owner != self.player:
+                continue
             if e.get_actual_pos() == pos:
                 self.selected_entities.append(e)
 
@@ -73,6 +79,8 @@ class Level(object):
 
         self.selected_entities.clear()
         for e in self.entities.sprites():
+            if e.owner != self.player:
+                continue
             e_pos = e.get_actual_pos()
             if lower_x <= e_pos[0] <= higher_x:
                 if lower_y <= e_pos[1] <= higher_y:
@@ -105,15 +113,15 @@ class Level(object):
         self.buildings.add(Building(self, (14, 13), "town_hall"))
         self.buildings.add(Building(self, (GAME_SIZE - 15, GAME_SIZE - 14), "town_hall"))
 
-        self.entities.add(Entity(self, (13, 12), "worker"))
-        self.entities.add(Entity(self, (14, 12), "worker"))
-        self.entities.add(Entity(self, (15, 12), "worker"))
-        self.entities.add(Entity(self, (16, 12), "worker"))
+        self.entities.add(Entity(self, self.player, (13, 12), "worker"))
+        self.entities.add(Entity(self, self.player, (14, 12), "worker"))
+        self.entities.add(Entity(self, self.player, (15, 12), "worker"))
+        self.entities.add(Entity(self, self.player, (16, 12), "worker"))
 
-        self.entities.add(Entity(self, (GAME_SIZE - 16, GAME_SIZE - 12), "worker"))
-        self.entities.add(Entity(self, (GAME_SIZE - 15, GAME_SIZE - 12), "worker"))
-        self.entities.add(Entity(self, (GAME_SIZE - 14, GAME_SIZE - 12), "worker"))
-        self.entities.add(Entity(self, (GAME_SIZE - 13, GAME_SIZE - 12), "worker"))
+        self.entities.add(Entity(self, self.ai, (GAME_SIZE - 16, GAME_SIZE - 12), "worker"))
+        self.entities.add(Entity(self, self.ai, (GAME_SIZE - 15, GAME_SIZE - 12), "worker"))
+        self.entities.add(Entity(self, self.ai, (GAME_SIZE - 14, GAME_SIZE - 12), "worker"))
+        self.entities.add(Entity(self, self.ai, (GAME_SIZE - 13, GAME_SIZE - 12), "worker"))
 
         while len(available_pos):
             center_pos = available_pos[random.randint(0, len(available_pos) - 1)]
@@ -139,9 +147,6 @@ class Level(object):
 
             width = int(center_range / 2 + random.uniform(0, center_range / 2))
             height = int(center_range / 2 + random.uniform(0, center_range / 2))
-
-            first_width = int((width * 2 + 1) / 2 + random.uniform(0, (width * 2 + 1)))
-            first_height = int((height * 2 + 1) / 2 + random.uniform(0, (width * 2 + 1)))
 
             for y in range(height * -1, height + 1):
                 for x in range(width * -1, width + 1):

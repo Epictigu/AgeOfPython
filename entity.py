@@ -8,9 +8,11 @@ from threading import Thread
 
 
 class Entity(Sprite):
-    def __init__(self, level, pos=(0, 0), name=None):
+    def __init__(self, level, player, pos=(0, 0), name=None):
         parser = configparser.ConfigParser()
         parser.read("entities/" + name + ".entity")
+
+        self.owner = player
 
         self.texture_file = parser.get("entity", "texture")
         self.max_health = parser.get("entity", "health")
