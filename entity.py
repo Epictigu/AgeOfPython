@@ -4,6 +4,7 @@ import math
 from sprite import *
 from cache import *
 from level import *
+from threading import Thread
 
 
 class Entity(Sprite):
@@ -36,6 +37,8 @@ class Entity(Sprite):
 
         self.blocked_counter = 0
         self.last_requested_position = (-1, -1)
+
+        self.path_thread = None
 
     def _get_pos(self):
         return (self.rect.midbottom[0] + 2 - self.rect[2] / 2) / TILESIZE_SCALED, (self.rect.midbottom[1] + 4 - self.rect[3]) / TILESIZE_SCALED
@@ -104,6 +107,10 @@ class Entity(Sprite):
         self.setRunningAnimation()
 
     def calc_path(self, pos):
+        self.path_thread = Thread(target=self.thread_path, args=(pos, ))
+        self.path_thread.start()
+
+    def thread_path(self, pos):
         self.last_requested_position = pos
 
         open_fields = [pos]
