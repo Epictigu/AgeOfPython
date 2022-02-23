@@ -8,13 +8,19 @@ tile = 0, 1
 
 [a]
 name = alternate_floor
-tile = 1, 1
+tile = 6, 0
 
 [t]
 name = tree
 tile = 0, 4
 block = true
+tree = true
 overlay = 0, 3
+
+[d]
+name = tree_cut
+tile = 2, 5
+tree = true
 
 [g]
 name = goldmine

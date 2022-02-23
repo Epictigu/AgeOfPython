@@ -7,7 +7,7 @@ from level import *
 
 
 class Building(Sprite):
-    def __init__(self, level, pos=(0, 0), name=None):
+    def __init__(self, level, player, pos=(0, 0), name=None):
         parser = configparser.ConfigParser()
         parser.read("buildings/" + name + ".building")
 
@@ -16,9 +16,14 @@ class Building(Sprite):
         self.max_health = parser.get("building", "health")
         self.health = self.max_health
         self.level = level
+        self.owner = player
 
         tile = parser.get("building", "tile").split(',')
         tile = int(tile[0]), int(tile[1])
-        super(Building, self).__init__((0, 0), TileCache(TILESIZE * int(parser.get("building", "width")), TILESIZE * int(parser.get("building", "height")), (tile[0] * TILESIZE, tile[1] * TILESIZE))[self.texture_file])
+
+        self.width = int(parser.get("building", "width"))
+        self.height = int(parser.get("building", "height"))
+
+        super(Building, self).__init__((0, 0), TileCache(TILESIZE * self.width, TILESIZE * self.height, (tile[0] * TILESIZE, tile[1] * TILESIZE))[self.texture_file])
         self.pos = pos
         self.move_to_pos = pos

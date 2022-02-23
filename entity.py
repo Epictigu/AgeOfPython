@@ -14,6 +14,7 @@ class Entity(Sprite):
 
         self.owner = player
 
+        self.name = parser.get("entity", "name")
         self.texture_file = parser.get("entity", "texture")
         self.max_health = parser.get("entity", "health")
         self.health = self.max_health
@@ -35,6 +36,7 @@ class Entity(Sprite):
         self.current_animation = self.key[self.default_animation]
         self.current_frame = int(self.current_animation['start'])
         self.walkwaittime = 0
+        self.woodwaittime = 0
         self.cell_previous = [[(-1, -1) for i in range(GAME_SIZE)] for j in range(GAME_SIZE)]
 
         self.blocked_counter = 0
@@ -51,9 +53,6 @@ class Entity(Sprite):
 
     pos = property(_get_pos, _set_pos)
 
-    def get_actual_pos(self):
-        return (self.rect.midbottom[0] + 2 + self.offset[0] - self.rect[2] / 2) / TILESIZE_SCALED, (self.rect.midbottom[1] + 4 + self.offset[1] - self.rect[3]) / TILESIZE_SCALED
-
     def update(self, *args):
         self.waittime += 1
         if self.waittime == 6:
@@ -64,12 +63,15 @@ class Entity(Sprite):
                 self.walkwaittime = 0
                 self.move_to_next_pos()
 
-    def setRunningAnimation(self):
+    def set_running_animation(self):
         actual_pos = self.get_actual_pos()
         move_pos = self.cell_previous[int(actual_pos[0])][int(actual_pos[1])]
 
         if move_pos == (-1, -1):
-            self.current_animation = self.key[self.default_animation]
+            if self.level.is_tree(actual_pos[0], actual_pos[1]):
+                self.current_animation = self.key['wood']
+            else:
+                self.current_animation = self.key[self.default_animation]
             return
 
         if move_pos[0] > self.get_actual_pos()[0]:
@@ -84,16 +86,24 @@ class Entity(Sprite):
     def move_to_next_pos(self):
         actual_pos = self.get_actual_pos()
         if self.cell_previous[int(actual_pos[0])][int(actual_pos[1])] != (-1, -1):
+            self.woodwaittime = 0
             new_pos = self.cell_previous[int(actual_pos[0])][int(actual_pos[1])]
-            if not self.level.is_blocking(new_pos[0], new_pos[1]):
+            if not self.level.is_blocking(new_pos[0], new_pos[1]) or (self.level.is_tree(new_pos[0], new_pos[1]) and not self.level.is_occupied(new_pos) and self.last_requested_position == new_pos):
                 self.pos = (new_pos[0] - self.offset[0] / TILESIZE_SCALED, new_pos[1] - self.offset[1] / TILESIZE_SCALED)
                 self.blocked_counter = 0
             else:
                 self.blocked_counter += 1
                 if self.blocked_counter >= 5:
                     self.calc_path(self.last_requested_position)
+        else:
+            if self.level.is_tree(actual_pos[0], actual_pos[1]):
+                self.woodwaittime = self.woodwaittime + 1
+                if self.woodwaittime > 7:
+                    self.woodwaittime = 0
+                    self.owner.wood = self.owner.wood + 1
+                    self.level.cut_tree(actual_pos)
 
-        self.setRunningAnimation()
+        self.set_running_animation()
 
     def stand_animation(self):
         while True:
@@ -106,7 +116,7 @@ class Entity(Sprite):
 
     def go_to(self, pos):
         self.calc_path(pos)
-        self.setRunningAnimation()
+        self.set_running_animation()
 
     def calc_path(self, pos):
         self.path_thread = Thread(target=self.thread_path, args=(pos, ))
@@ -120,7 +130,7 @@ class Entity(Sprite):
         cell_previous = [[(-1, -1) for i in range(GAME_SIZE)] for j in range(GAME_SIZE)]
         cell_count[pos[0]][pos[1]] = 0
 
-        if self.level.is_blocking(pos[0], pos[1]):
+        if self.level.is_blocking(pos[0], pos[1]) and not (self.level.is_tree(pos[0], pos[1]) and not self.level.is_occupied((pos[0], pos[1]))):
             open_fields.clear()
 
         while open_fields:

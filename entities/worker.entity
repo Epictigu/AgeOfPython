@@ -1,4 +1,5 @@
 [entity]
+name = Worker
 texture = Peasant.png
 health = 10
 damage = 1

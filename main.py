@@ -161,6 +161,25 @@ if __name__ == '__main__':
         py.draw.rect(screen, py.Color(255, 0, 0), (screen.get_width() - exit_rect.width - 32, 0, screen.get_width(), 32))
         screen.blit(exit_img, (screen.get_width() - exit_rect.width - 16, exit_rect[1]))
 
+        if len(level.selected_entities) == 1:
+            screen.blit(header_font.render("Name: " + level.selected_entities[0].name, True, (255, 255, 255)), (MINIMAP_SIZE + 32, screen.get_height() - MINIMAP_SIZE + 32))
+            screen.blit(header_font.render("Leben: " + level.selected_entities[0].health + "/" + level.selected_entities[0].max_health, True, (255, 255, 255)), (MINIMAP_SIZE + 32, screen.get_height() - MINIMAP_SIZE + 52))
+            screen.blit(header_font.render("Schaden: " + level.selected_entities[0].base_damage, True, (255, 255, 255)), (MINIMAP_SIZE + 32, screen.get_height() - MINIMAP_SIZE + 72))
+        elif len(level.selected_entities) > 1:
+            entity_dict = {}
+            for e in level.selected_entities:
+                name = e.name
+                if name in entity_dict:
+                    name_count = entity_dict[name]
+                    entity_dict[name] = name_count + 1
+                else:
+                    entity_dict[name] = 1
+            screen.blit(header_font.render("Ausgewählte Einheiten:", True, (255, 255, 255)), (MINIMAP_SIZE + 32, screen.get_height() - MINIMAP_SIZE + 32))
+            y = 32
+            for name in entity_dict:
+                y = y + 20
+                screen.blit(header_font.render(name + ": " + str(entity_dict[name]), True, (255, 255, 255)), (MINIMAP_SIZE + 32, screen.get_height() - MINIMAP_SIZE + y))
+
         pygame.display.flip()
         clock.tick(60)
 

@@ -33,6 +33,7 @@ class Level(object):
         self.entities = py.sprite.RenderUpdates()
         self.selected_entities = []
         self.buildings = py.sprite.RenderUpdates()
+        self.sprites = pygame.sprite.RenderUpdates()
 
         self.generate()
 
@@ -47,7 +48,6 @@ class Level(object):
                     self.items[(x, y)] = self.key[c]
         self.camera = Camera(self)
 
-        self.sprites = pygame.sprite.RenderUpdates()
         for pos, tile in self.items.items():
             sprite = Sprite(pos, SPRITE_CACHE[tile["sprite"]])
             self.sprites.add(sprite)
@@ -56,6 +56,7 @@ class Level(object):
         self.overlay_image = py.Surface((self.width * TILESIZE_SCALED, self.height * TILESIZE_SCALED), pygame.SRCALPHA)
         self.minimap = py.Surface((MINIMAP_SIZE, MINIMAP_SIZE))
         self.tiles = []
+        self.cut_trees = {}
 
     def select_entity(self, pos):
         self.selected_entities.clear()
@@ -110,8 +111,8 @@ class Level(object):
                         if (x + offset_x, y + offset_y) in available_pos:
                             available_pos.remove((x + offset_x, y + offset_y))
 
-        self.buildings.add(Building(self, (14, 13), "town_hall"))
-        self.buildings.add(Building(self, (GAME_SIZE - 15, GAME_SIZE - 14), "town_hall"))
+        self.buildings.add(Building(self, self.player, (14, 13), "town_hall"))
+        self.buildings.add(Building(self, self.ai, (GAME_SIZE - 15, GAME_SIZE - 14), "town_hall"))
 
         self.entities.add(Entity(self, self.player, (13, 12), "worker"))
         self.entities.add(Entity(self, self.player, (14, 12), "worker"))
@@ -157,6 +158,8 @@ class Level(object):
         for x in range(GAME_SIZE):
             for y in range(GAME_SIZE):
                 if not self.is_blocking(y, x):
+                    if self.map[y][x] == 'g' or self.map[y - 1][x - 1] == 'g' or self.map[y - 1][x] == 'g' or self.map[y][x - 1] == 'g':
+                        continue
                     if random.randint(0, 20) == 0:
                         self.map[y][x] = 't'
 
@@ -190,7 +193,7 @@ class Level(object):
     def is_tree(self, x, y):
         """Ist an dieser Position ein Baum?"""
 
-        return self.get_bool(x, y, 'tree')
+        return self.get_bool(int(x), int(y), 'tree')
 
     def is_blocking(self, x, y):
         """Ist diese Position blockiert?"""
@@ -201,6 +204,12 @@ class Level(object):
             return True
         for e in self.entities.sprites():
             if e.get_actual_pos()[0] == x and e.get_actual_pos()[1] == y:
+                return True
+        for s in self.sprites.sprites():
+            if s.get_actual_pos()[0] <= x <= s.get_actual_pos()[0] + 1 and s.get_actual_pos()[1] <= y <= s.get_actual_pos()[1] + 1:
+                return True
+        for b in self.buildings.sprites():
+            if b.get_actual_pos()[0] <= x <= b.get_actual_pos()[0] + b.width - 1 and b.get_actual_pos()[1] <= y <= b.get_actual_pos()[1] + b.height - 1:
                 return True
 
         return False
@@ -231,8 +240,26 @@ class Level(object):
 
         return self.image, self.overlay_image, self.minimap
 
+    def cut_tree(self, pos):
+        if self.is_tree(pos[0], pos[1]) and pos not in self.cut_trees:
+            self.change_tile(pos, 'd')
+            self.cut_trees[pos] = 100
+        elif self.is_tree(pos[0], pos[1]):
+            tree_count = self.cut_trees[pos]
+            tree_count = tree_count - 1
+            if tree_count < 1:
+                self.change_tile(pos, '.')
+            else:
+                self.cut_trees[pos] = 100
+
+    def is_occupied(self, pos):
+        for e in self.entities:
+            if e.get_actual_pos() == pos:
+                return True
+        return False
+
     def change_tile(self, pos, tile_key):
-        old_key = self.map[pos[1]][pos[0]]
+        old_key = self.map[int(pos[1])][int(pos[0])]
 
         tile = self.key[tile_key]['tile'].split(', ')
         tile = int(tile[0]), int(tile[1])
@@ -242,7 +269,7 @@ class Level(object):
 
         if 'overlay' in self.key[old_key]:
             py.draw.rect(self.overlay_image, (0, 0, 0, 0), py.Rect(pos[0] * TILESIZE_SCALED, (pos[1] - 1) * TILESIZE_SCALED, TILESIZE_SCALED, TILESIZE_SCALED))
-        self.map[pos[1]][pos[0]] = tile_key
+        self.map[int(pos[1])][int(pos[0])] = tile_key
 
         if 'overlay' in self.key[tile_key]:
             overlay = self.key[tile_key]['overlay'].split(',')

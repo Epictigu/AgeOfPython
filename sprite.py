@@ -30,6 +30,9 @@ class Sprite(py.sprite.Sprite):
             self.waittime = 0
             self.animation.__next__()
 
+    def get_actual_pos(self):
+        return int((self.rect.midbottom[0] + 2 + self.offset[0] - self.rect[2] / 2) / TILESIZE_SCALED), int((self.rect.midbottom[1] + 4 + self.offset[1] - self.rect[3]) / TILESIZE_SCALED)
+
     def _get_pos(self):
         return (self.rect.midbottom[0] - self.rect[2] / 2) / TILESIZE_SCALED, (self.rect.midbottom[1] - self.rect[3]) / TILESIZE_SCALED
 
