@@ -10,6 +10,7 @@ from entity import *
 
 
 def redraw_selectors():
+    """Zeichne die Selektoren neu"""
     for s in selector.sprites():
         mouse_pos = pygame.mouse.get_pos()
 
@@ -29,6 +30,7 @@ def redraw_selectors():
 
 
 def move_map(x_pos, y_pos):
+    """Funktion um Karte an eine bestimmte Position zu verschieben. Benutzt in Minimap."""
     level.camera.move((int(x_pos / MINIMAP_SIZE * level.width * TILESIZE_SCALED), int(y_pos / MINIMAP_SIZE * level.height * TILESIZE_SCALED)))
     move_sprites(level.sprites)
     move_sprites(level.entities)
@@ -36,6 +38,7 @@ def move_map(x_pos, y_pos):
 
 
 def check_for_edge():
+    """Funktion zum Überprüfen ob die Maus an einer oder zwei der vier Seiten angekommen ist"""
     mouse_pos = pygame.mouse.get_pos()
     screen_width = py.display.Info().current_w
     screen_height = py.display.Info().current_h
@@ -53,11 +56,13 @@ def check_for_edge():
 
 
 def move_sprites(sprite_group):
+    """Bewege alle Sprites in einer einzelnen Sprite Group."""
     for s in sprite_group:
         s.move((level.camera.x_offset, level.camera.y_offset))
 
 
 def get_pos(x, y):
+    """Funktion zum Berechnen einer Tileposition anhand der Bildschirmposition"""
     pos_x = level.camera.x_offset + x
     pos_y = level.camera.y_offset + y
 
@@ -65,6 +70,7 @@ def get_pos(x, y):
 
 
 if __name__ == '__main__':
+    """Main-Funktion; Beinhaltet Gameloop"""
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     main_surface = py.Surface((screen.get_width(), screen.get_height() - MINIMAP_SIZE - 32))
 

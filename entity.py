@@ -9,6 +9,7 @@ from threading import Thread
 
 class Entity(Sprite):
     def __init__(self, level, player, pos=(0, 0), name=None):
+        """Initialiiserung einer Entität"""
         parser = configparser.ConfigParser()
         parser.read("entities/" + name + ".entity")
 
@@ -45,15 +46,18 @@ class Entity(Sprite):
         self.path_thread = None
 
     def _get_pos(self):
+        """Getter für Pos"""
         return (self.rect.midbottom[0] + 2 - self.rect[2] / 2) / TILESIZE_SCALED, (self.rect.midbottom[1] + 4 - self.rect[3]) / TILESIZE_SCALED
 
     def _set_pos(self, pos):
+        """Setter für Pos"""
         self.rect.midbottom = pos[0] * TILESIZE_SCALED + self.rect[2] / 2 - 2, pos[1] * TILESIZE_SCALED + self.rect[3] - 4
         self.depth = self.rect.midbottom[1]
 
     pos = property(_get_pos, _set_pos)
 
     def update(self, *args):
+        """Updaten der einzelnen Animationen & Pathfinding ablaufen"""
         self.waittime += 1
         if self.waittime == 6:
             self.waittime = 0
@@ -64,6 +68,7 @@ class Entity(Sprite):
                 self.move_to_next_pos()
 
     def set_running_animation(self):
+        """Setze gewünschte Animation"""
         actual_pos = self.get_actual_pos()
         move_pos = self.cell_previous[int(actual_pos[0])][int(actual_pos[1])]
 
@@ -84,6 +89,7 @@ class Entity(Sprite):
             self.current_animation = self.key['run_up']
 
     def move_to_next_pos(self):
+        """Bewege zur nächsten Position, die mit Pathfinding berechnet wurde"""
         actual_pos = self.get_actual_pos()
         if self.cell_previous[int(actual_pos[0])][int(actual_pos[1])] != (-1, -1):
             self.woodwaittime = 0
@@ -106,6 +112,7 @@ class Entity(Sprite):
         self.set_running_animation()
 
     def stand_animation(self):
+        """Führe Animation aus; Bietet mehrere Animationsmöglichkeiten"""
         while True:
             self.current_frame += 1
             if self.current_frame > int(self.current_animation['end']) or self.current_frame < int(self.current_animation['start']):
@@ -115,14 +122,17 @@ class Entity(Sprite):
             yield None
 
     def go_to(self, pos):
+        """Gehe an gewünschte Position"""
         self.calc_path(pos)
         self.set_running_animation()
 
     def calc_path(self, pos):
+        """Führe Threading für Pathfinding aus"""
         self.path_thread = Thread(target=self.thread_path, args=(pos, ))
         self.path_thread.start()
 
     def thread_path(self, pos):
+        """Pathfinding Methode (Dijkstra)"""
         self.last_requested_position = pos
 
         open_fields = [pos]

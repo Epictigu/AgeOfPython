@@ -8,6 +8,7 @@ from level import *
 
 class Building(Sprite):
     def __init__(self, level, player, pos=(0, 0), name=None):
+        """Initialisierung von Gebäuden"""
         parser = configparser.ConfigParser()
         parser.read("buildings/" + name + ".building")
 

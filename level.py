@@ -13,6 +13,7 @@ from player import *
 
 class Level(object):
     def __init__(self, filename="level.map"):
+        """Funktion um ein Level zu initialiaiseren"""
         self.map = [['.' for i in range(GAME_SIZE)] for j in range(GAME_SIZE)]
         self.key = {}
         parser = configparser.ConfigParser()
@@ -59,6 +60,7 @@ class Level(object):
         self.cut_trees = {}
 
     def select_entity(self, pos):
+        """Funktion zum Auswählen einer einzelnen Entität"""
         self.selected_entities.clear()
         for e in self.entities.sprites():
             if e.owner != self.player:
@@ -67,6 +69,7 @@ class Level(object):
                 self.selected_entities.append(e)
 
     def select_entities(self, pos1, pos2):
+        """Funktion zum Auswählen mehrerer Entitäten"""
         lower_x = pos1[0]
         higher_x = pos2[0]
         if lower_x > higher_x:
@@ -88,6 +91,7 @@ class Level(object):
                     self.selected_entities.append(e)
 
     def generate(self):
+        """Funktion zum Generieren eines Levels"""
         available_pos = []
         for y in range(GAME_SIZE):
             for x in range(GAME_SIZE):
@@ -164,6 +168,7 @@ class Level(object):
                         self.map[y][x] = 't'
 
     def update(self):
+        """Updatet die Animationen der einzelnen Sprites"""
         self.sprites.update()
         self.entities.update()
 
@@ -215,6 +220,7 @@ class Level(object):
         return False
 
     def pre_render(self):
+        """Rendert die Map vor"""
         self.tiles = MAP_CACHE[self.tileset]
 
         overlays_dict = {}
@@ -241,6 +247,7 @@ class Level(object):
         return self.image, self.overlay_image, self.minimap
 
     def cut_tree(self, pos):
+        """Funktion zur Baum Fällen Interaktion"""
         if self.is_tree(pos[0], pos[1]) and pos not in self.cut_trees:
             self.change_tile(pos, 'd')
             self.cut_trees[pos] = 100
@@ -253,12 +260,14 @@ class Level(object):
                 self.cut_trees[pos] = 100
 
     def is_occupied(self, pos):
+        """Ist ein Feld besetzt?"""
         for e in self.entities:
             if e.get_actual_pos() == pos:
                 return True
         return False
 
     def change_tile(self, pos, tile_key):
+        """Ändere das Aussehen an einer bestimmten Position um"""
         old_key = self.map[int(pos[1])][int(pos[0])]
 
         tile = self.key[tile_key]['tile'].split(', ')
@@ -277,6 +286,7 @@ class Level(object):
             self.overlay_image.blit(overlay_image, (pos[0] * TILESIZE_SCALED, (pos[1] - 1) * TILESIZE_SCALED))
 
     def is_valid_point(self, pos):
+        """Ist der Punkt innerhalb des Spielfeldles?"""
         if 0 <= pos[0] < GAME_SIZE and 0 <= pos[1] < GAME_SIZE:
             return True
         return False
@@ -284,6 +294,7 @@ class Level(object):
 
 class Camera:
     def __init__(self, level):
+        """Initialisierung einer Kamera"""
         self.width = py.display.Info().current_w
         self.height = py.display.Info().current_h - MINIMAP_SIZE - 32
 
@@ -293,26 +304,31 @@ class Camera:
         self.level = level
 
     def moveRight(self):
+        """Bewege Kamera nach Rechts"""
         self.x_offset = self.x_offset + 30
         if self.x_offset + self.width > self.level.width * TILESIZE_SCALED:
             self.x_offset = self.level.width * TILESIZE_SCALED - self.width
 
     def moveLeft(self):
+        """Bewege Kamera nach Links"""
         self.x_offset = self.x_offset - 30
         if self.x_offset < 0:
             self.x_offset = 0
 
     def moveDown(self):
+        """Bewege Kamera nach Unten"""
         self.y_offset = self.y_offset + 30
         if self.y_offset + self.height > self.level.height * TILESIZE_SCALED:
             self.y_offset = self.level.height * TILESIZE_SCALED - self.height
 
     def moveUp(self):
+        """Bewege Kamera nach Oben"""
         self.y_offset = self.y_offset - 30
         if self.y_offset < 0:
             self.y_offset = 0
 
     def move(self, middle):
+        """Bewege Kamera an eine bestimmte Stelle, mithilfe Mittelpunkt"""
         if middle[0] > self.level.width * TILESIZE_SCALED - self.width / 2:
             middle = (self.level.width * TILESIZE_SCALED - self.width / 2, middle[1])
         if middle[1] > self.level.height * TILESIZE_SCALED - self.height / 2:

@@ -4,12 +4,14 @@ from settings import *
 
 class TileCache:
     def __init__(self, width=32, height=None, offset=(0, 0)):
+        """Initialiserung des TileCaches; Beinhaltet die einzelnen möglichen Texturen, damit diese nicht neu geladen werden müssen"""
         self.width = width
         self.height = height or width
         self.cache = {}
         self.offset = offset
 
     def __getitem__(self, filename):
+        """Bekomme eine einzelne Textur bei Bedarf"""
         key = (filename, self.width, self.height)
         try:
             return self.cache[key]
@@ -19,6 +21,7 @@ class TileCache:
             return tile_table
 
     def _load_tile_table(self, filename, width, height):
+        """Lade die einzelnen Texturen"""
         image = py.image.load(filename).convert_alpha()
         image_width, image_height = image.get_size()
         tile_table = []
